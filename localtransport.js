@@ -43,8 +43,8 @@ Module.register('localtransport', {
       params += '&destination=' + this.config.destination;
       params += '&key=' + this.config.api_key;
       params += '&traffic_model=' + this.config.traffic_model;
-      params += '&departure_time=now';
-      params += '&alternatives=true';
+      params += '&departure_time=' + this.config.departure_time; 
+      params += '&alternatives=' + this.config.alternatives;
       return params;
   },
   renderLeg: function(wrapper, leg){
