@@ -42,6 +42,8 @@ Add module configuration to config.js.
 |`destination`|The target location.<br><br>**Example:** `Frankfurt HBF`<br>This value is **REQUIRED**|
 |`maxConnections`|How many connections should be displayed?<br><br>**Default value:** `3`|
 |`updateInterval`|How often does the content needs to be fetched? (Minutes)<br><br>**Default value:** `5`|
+|`absoluteTime`|If `true` displays the departure time as 'at hh:mm', if `false` displays 'in xx mins'<br><br>**Default value:** `false`|
+|`showDuration`|If `true` displays the trip duration following the departure time<br><br>**Default value:** `false`|
 |`animationSpeed`|Speed of the update animation. (Seconds)<br><br>**Default value:** `1`|
 
 ## Special Thanks

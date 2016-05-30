@@ -16,6 +16,8 @@ Module.register('localtransport', {
     units: 'metric',
     alternatives: true,
     maxAlternatives: 3,
+    absoluteTime: false,
+    showDuration: false,
     apiBase: 'https://maps.googleapis.com/',
     apiEndpoint: 'maps/api/directions/json'
   },
@@ -44,16 +46,26 @@ Module.register('localtransport', {
       params += '&destination=' + this.config.destination;
       params += '&key=' + this.config.api_key;
       params += '&traffic_model=' + this.config.traffic_model;
-      params += '&departure_time=now';
-      params += '&alternatives=true';
+      params += '&departure_time=' + this.config.departure_time; 
+      params += '&alternatives=' + this.config.alternatives;
       return params;
   },
   renderLeg: function(wrapper, leg){
     var depature = leg.departure_time.value * 1000;
     var arrival = leg.arrival_time.value * 1000;
     var span = document.createElement("div");
-    span.innerHTML =
-      moment(depature).fromNow()
+    if (!this.config.absoluteTime) {
+      span.innerHTML = moment(depature).fromNow() 
+    } else {
+      if (config.timeFormat !== 24) {
+        span.innerHTML = this.translate('ABSOLUTE_PREFIX') + moment(depature).format('h:mm A') 
+      } else {
+        span.innerHTML = this.translate('ABSOLUTE_PREFIX') + moment(depature).format('HH:mm') 
+      }
+    }
+    if (this.config.showDuration) {
+      span.innerHTML += "(" + moment.duration(moment(arrival).diff(depature, 'minutes'), 'minutes').humanize() + ")";
+    }
       // + this.translate('TRAVEL_TIME') + ": "
       // + moment.duration(moment(arrival).diff(depature, 'minutes'), 'minutes').humanize()
       ;
@@ -92,7 +104,8 @@ Module.register('localtransport', {
 	},
 	getTranslations: function() {
 		return {
-        de: "i18n/de.json"
+        de: "i18n/de.json",
+        en: "i18n/en.json"
     };
 	},
   getDom: function() {
