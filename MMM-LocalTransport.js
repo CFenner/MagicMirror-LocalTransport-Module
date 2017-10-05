@@ -126,7 +126,7 @@ Module.register('MMM-LocalTransport', {
             }else{
                 img.className = "symbol bw";
             }
-            img.src = "http://maps.gstatic.com/mapfiles/transit/iw2/6/walk.png";
+            img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/walk.png";
             //img.src = "/localtransport/walk.png"; //needs to be saved in localtransport/public/walk.png
             wrapper.appendChild(img)
             var span = document.createElement("span");
@@ -170,7 +170,7 @@ Module.register('MMM-LocalTransport', {
                 img.className = "symbol bw";
             }
             /* get symbol online*/
-            img.src = details.line.vehicle.local_icon || ("http:" + details.line.vehicle.icon);
+            img.src = details.line.vehicle.local_icon || ("https:" + details.line.vehicle.icon);
             /* can provide own symbols under /localtransport/public/*.png */
             //img.src = "/localtransport/" + details.line.vehicle.name + ".png";
             img.alt = "[" + details.line.vehicle.name +"]";
