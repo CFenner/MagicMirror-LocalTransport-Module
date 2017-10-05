@@ -1,4 +1,4 @@
-.localtransport ul {
+/*.localtransport ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -23,6 +23,11 @@
 
 .localtransport img.symbol.bw {
   -webkit-filter: grayscale(100%);
-}
-
+}*/
+.MMM-LocalTransport ul{margin:0;padding:0;list-style:none;text-align:left}
+.MMM-LocalTransport ul li{margin-bottom:.25em}
+.MMM-LocalTransport ul li img.bw{-webkit-filter:grayscale(100%)}
+.MMM-LocalTransport ul li img:first-child{margin-left:0}
+.MMM-LocalTransport ul li img{margin:0 .25em 0 .5em}
+.MMM-LocalTransport ul li div{margin-left:.5em}
 /* This beautiful CSS-File has been crafted with LESS (lesscss.org) and compiled by simpLESS (wearekiss.com/simpless) */
