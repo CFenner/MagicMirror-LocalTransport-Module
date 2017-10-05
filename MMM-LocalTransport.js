@@ -29,7 +29,8 @@ Module.register('MMM-LocalTransport', {
     api_key: 'YOUR_API_KEY',
     apiBase: 'https://maps.googleapis.com/',
     apiEndpoint: 'maps/api/directions/json',
-    debug: false
+    debug: false,
+    _laststop: ''
   },
   start: function() {
     Log.info('Starting module: ' + this.name);
@@ -135,12 +136,28 @@ Module.register('MMM-LocalTransport', {
                 span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_SL"),this.translate("MINUTE_SS"));
                 span.innerHTML = span.innerHTML.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
             }
+            if (this.config._laststop !== ''){
+               /* walking step doesn't have a departure_stop set - maybe something else but can't find the documentation right now.
+                so in order to display the departure, we will just save the arrival of any transit step into a global variable and 
+                display the previous arrival instead of the current departure location. That means we need to reset the global variable
+                to not cause interference between different routes and we need to skip the display for the first step if that is a walking
+                step (alternatively one could display the departure location specified by the user, but I prefer this option)
+                */
+               if (this.config.displayStationLength > 0){
+                  /* add departure stop (shortened)*/
+                  span.innerHTML += " ("+this.translate("FROM")+" " + this.shorten(this.config._laststop, this.config.displayStationLength) + ")";
+               }else if (this.config.displayStationLength == 0){
+                  /* add departure stop*/
+                  span.innerHTML += " ("+this.translate("FROM")+" " + this.config._laststop + ")";
+               }
+            }
             span.className = "xsmall dimmed";
             wrapper.appendChild(span);
         }else{
             /*skip walking*/
             return;
         }
+        this.config._laststop = '';
     }else{
         /*if this is a transit step*/
         var details = step.transit_details;
@@ -173,6 +190,7 @@ Module.register('MMM-LocalTransport', {
                 /* add vehicle type for debug*/
                 span.innerHTML += " [" + details.line.vehicle.name +"]";
             }
+            this.config._laststop = details.arrival_stop.name;
             span.className = "xsmall dimmed";
             wrapper.appendChild(span);
         }
