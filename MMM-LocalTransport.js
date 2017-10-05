@@ -26,6 +26,7 @@ Module.register('MMM-LocalTransport', {
     traffic_model: 'best_guess',
     departure_time: 'now',
     alternatives: true,
+    api_key: 'YOUR_API_KEY',
     apiBase: 'https://maps.googleapis.com/',
     apiEndpoint: 'maps/api/directions/json',
     debug: false
@@ -33,6 +34,11 @@ Module.register('MMM-LocalTransport', {
   start: function() {
     Log.info('Starting module: ' + this.name);
     this.loaded = false;
+    if (this.config.api_key == 'YOUR_API_KEY'){
+      /*if there is no api key specified in the options of the module,
+       look it up in the main config-file settings */
+      this.config.api_key = config.apiKeys.google;
+    }
     this.url = this.config.apiBase + this.config.apiEndpoint + this.getParams();
     var d = new Date();
     this.lastupdate = d.getTime() - 2 * this.config.updateInterval * 60 * 1000;
