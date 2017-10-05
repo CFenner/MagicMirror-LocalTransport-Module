@@ -12,9 +12,17 @@
 }
 .localtransport ul li img {
   margin: 0 .25em 0 .5em;
+  max-height: 15px;
+  max-width: 15px;
+  height: 15px;
+  width: 15px;
 }
 .localtransport ul li div {
   margin-left: .5em;
+}
+
+.localtransport img.symbol.bw {
+  -webkit-filter: grayscale(100%);
 }
 
 /* This beautiful CSS-File has been crafted with LESS (lesscss.org) and compiled by simpLESS (wearekiss.com/simpless) */

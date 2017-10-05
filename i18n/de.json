@@ -1,3 +1,11 @@
 {
-  "LOADING_CONNECTIONS": "Lade Verbindungen ..."
+  "LOADING_CONNECTIONS": "Lade Verbindungen ...",
+  "ARRIVAL": "Ankunft",
+  "MINUTE_PL": "Minuten",
+  "MINUTE_SL": "Minute",
+  "SECOND_PL": "Sekunden",
+  "MINUTE_PS": "min",
+  "MINUTE_SS": "min",
+  "SECOND_PS": "sek",
+  "FROM": "von"
 }
