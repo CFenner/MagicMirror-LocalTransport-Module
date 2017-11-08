@@ -7,5 +7,6 @@
   "MINUTE_PS": "min",
   "MINUTE_SS": "min",
   "SECOND_PS": "sec",
-  "FROM": "from"
+  "FROM": "from",
+  "ALT": "alternatives"
 }

@@ -27,5 +27,47 @@ module.exports = NodeHelper.create({
         }
       });
     }
+    if (notification === 'LOCAL_TRANSPORT_WALK_REQUEST') {
+      var that = this;
+      request({
+          url: payload.url,
+          method: 'GET'
+        }, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          that.sendSocketNotification('LOCAL_TRANSPORT_WALK_RESPONSE', {
+            id: payload.id,
+            data: JSON.parse(body)
+          });
+        }
+      });
+    }
+    if (notification === 'LOCAL_TRANSPORT_CYCLE_REQUEST') {
+      var that = this;
+      request({
+          url: payload.url,
+          method: 'GET'
+        }, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          that.sendSocketNotification('LOCAL_TRANSPORT_CYCLE_RESPONSE', {
+            id: payload.id,
+            data: JSON.parse(body)
+          });
+        }
+      });
+    }
+    if (notification === 'LOCAL_TRANSPORT_DRIVE_REQUEST') {
+      var that = this;
+      request({
+          url: payload.url,
+          method: 'GET'
+        }, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          that.sendSocketNotification('LOCAL_TRANSPORT_DRIVE_RESPONSE', {
+            id: payload.id,
+            data: JSON.parse(body)
+          });
+        }
+      });
+    }
   }
 });
