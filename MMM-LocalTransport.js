@@ -79,51 +79,45 @@ Module.register('MMM-LocalTransport', {
             this.updateDom(); //this.updateDom(this.config.animationSpeed * 1000)
         }
     },
+    sendRequest: function(requestName) {
+        this.sendSocketNotification(
+            requestName, {
+                id: this.identifier,
+                url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
+            }
+        );
+    },
     doMainUpdate: function() {
         /*doMainUpdate
          *requests routes from Google for public transport and any alternatives if applicable.
          */
         //request routes from Google
-        this.sendSocketNotification(
+        this.sendRequest('LOCAL_TRANSPORT_REQUEST');
+        /*this.sendSocketNotification(
             'LOCAL_TRANSPORT_REQUEST', {
                 id: this.identifier,
                 url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
             }
-        );
+        );*/
         Log.info("requested public transport route");
         //request walking time
         if (this.config.displayAltWalk){
             this.config.mode = 'walking';
-            this.sendSocketNotification(
-                'LOCAL_TRANSPORT_WALK_REQUEST', {
-                    id: this.identifier,
-                    url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
-                }
-            );
+            this.sendRequest('LOCAL_TRANSPORT_WALK_REQUEST');
             Log.info("requested walking route");
             this.config.mode = 'transit';
         }
         //request cycling time
         if (this.config.displayAltCycle){
             this.config.mode = 'bicycling';
-            this.sendSocketNotification(
-                'LOCAL_TRANSPORT_CYCLE_REQUEST', {
-                    id: this.identifier,
-                    url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
-                }
-            );
+            this.sendRequest('LOCAL_TRANSPORT_CYCLE_REQUEST');
             Log.info("requested cycling route");
             this.config.mode = 'transit';
         }
         //request driving time
         if (this.config.displayAltWalk){
             this.config.mode = 'driving';
-            this.sendSocketNotification(
-                'LOCAL_TRANSPORT_DRIVE_REQUEST', {
-                    id: this.identifier,
-                    url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
-                }
-            );
+            this.sendRequest('LOCAL_TRANSPORT_DRIVE_REQUEST');
             Log.info("requested driving route");
             this.config.mode = 'transit';
         }
