@@ -142,6 +142,26 @@ Module.register('MMM-LocalTransport', {
         params += '&alternatives=true';
         return params;
     },
+    getSymbol: function(symName){
+        var img = document.createElement("img");
+        if(this.config.showColor){
+            img.className = "symbol";
+        }else{
+            img.className = "symbol bw";
+        }
+        img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/"+symName+".png";
+        //img.src = "/localtransport/"+symName+".png"; //needs to be saved in localtransport/public/walk.png
+        return img;
+    },
+    convertTime: function(seconds){
+        var ans = moment.duration(seconds, 'seconds').locale(this.config.language).humanize();
+        if(this.config.displayWalkType === 'short'){
+            ans = ans.replace(this.translate("MINUTE_PL"),this.translate("MINUTE_PS"));
+            ans = ans.replace(this.translate("MINUTE_SL"),this.translate("MINUTE_SS"));
+            ans = ans.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
+        }
+        return ans;
+    },
     renderLeg: function(wrapper, leg){
         /* renderLeg
          * creates HTML element for one leg of a route
@@ -176,22 +196,9 @@ Module.register('MMM-LocalTransport', {
             }else if(this.config.displayWalkType != 'none'){
                 /*if walking and walking times should be
                  *specified, add symbol and time*/
-                var img = document.createElement("img");
-                if(this.config.showColor){
-                    img.className = "symbol";
-                }else{
-                    img.className = "symbol bw";
-                }
-                img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/walk.png";
-                //img.src = "/localtransport/walk.png"; //needs to be saved in localtransport/public/walk.png
-                wrapper.appendChild(img)
+                wrapper.appendChild(this.getSymbol("walk"));
                 var span = document.createElement("span");
-                span.innerHTML = moment.duration(duration, 'seconds').locale(this.config.language).humanize();
-                if(this.config.displayWalkType === 'short'){
-                    span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_PL"),this.translate("MINUTE_PS"));
-                    span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_SL"),this.translate("MINUTE_SS"));
-                    span.innerHTML = span.innerHTML.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
-                }
+                span.innerHTML = this.convertTime(duration);
                 if (this.config._laststop !== ''){
                    /* walking step doesn't have a departure_stop set - maybe something else but can't find the documentation right now.
                     so in order to display the departure, we will just save the arrival of any transit step into a global variable and 
@@ -263,67 +270,28 @@ Module.register('MMM-LocalTransport', {
         /*add alternative walking time*/
         if (this.config.displayAltWalk){
             //symbol for walking
-            var img = document.createElement("img");
-            if(this.config.showColor){
-                img.className = "symbol";
-            }else{
-                img.className = "symbol bw";
-            }
-            img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/walk.png";
-            //img.src = "/localtransport/walk.png"; //needs to be saved in localtransport/public/walk.png
-            li.appendChild(img);
+            li.appendChild(this.getSymbol("walk"));
             //actual walking time
             var span = document.createElement("span");
-            span.innerHTML = moment.duration(this.config._walktime, 'seconds').locale(this.config.language).humanize();
-            if(this.config.displayWalkType === 'short'){
-                span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_PL"),this.translate("MINUTE_PS"));
-                span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_SL"),this.translate("MINUTE_SS"));
-                span.innerHTML = span.innerHTML.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
-            }
+            span.innerHTML = this.convertTime(this.config._walktime);
             li.appendChild(span);
         }
         /*add alternative cycling time*/
         if (this.config.displayAltCycle){
             //symbol for bicycle
-            var img = document.createElement("img");
-            if(this.config.showColor){
-                img.className = "symbol";
-            }else{
-                img.className = "symbol bw";
-            }
-            img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/cycle.png";
-            //img.src = "/localtransport/cycle.png"; //needs to be saved in localtransport/public/walk.png
-            li.appendChild(img);
+            li.appendChild(this.getSymbol("cycle"));
             //actual cycling time
             var span = document.createElement("span");
-            span.innerHTML = moment.duration(this.config._cycletime, 'seconds').locale(this.config.language).humanize();
-            if(this.config.displayWalkType === 'short'){
-                span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_PL"),this.translate("MINUTE_PS"));
-                span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_SL"),this.translate("MINUTE_SS"));
-                span.innerHTML = span.innerHTML.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
-            }
+            span.innerHTML = this.convertTime(this.config._cycletime);
             li.appendChild(span);
         }
         /*add alternative driving time*/
         if (this.config.displayAltDrive){
             //symbol for car
-            var img = document.createElement("img");
-            if(this.config.showColor){
-                img.className = "symbol";
-            }else{
-                img.className = "symbol bw";
-            }
-            img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/drive.png";
-            //img.src = "/localtransport/drive.png"; //needs to be saved in localtransport/public/walk.png
-            li.appendChild(img);
+            li.appendChild(this.getSymbol("drive"));
             //actual driving time
             var span = document.createElement("span");
-            span.innerHTML = moment.duration(this.config._drivetime, 'seconds').locale(this.config.language).humanize();
-            if(this.config.displayWalkType === 'short'){
-                span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_PL"),this.translate("MINUTE_PS"));
-                span.innerHTML = span.innerHTML.replace(this.translate("MINUTE_SL"),this.translate("MINUTE_SS"));
-                span.innerHTML = span.innerHTML.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
-            }
+            span.innerHTML = this.convertTime(this.config._drivetime);
             li.appendChild(span);
         }
         return li;
