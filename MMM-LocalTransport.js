@@ -86,6 +86,8 @@ Module.register('MMM-LocalTransport', {
                 url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
             }
         );
+        Log.info("requested "+requestName);
+        this.config.mode = 'transit';
     },
     doMainUpdate: function() {
         /*doMainUpdate
@@ -93,33 +95,20 @@ Module.register('MMM-LocalTransport', {
          */
         //request routes from Google
         this.sendRequest('LOCAL_TRANSPORT_REQUEST');
-        /*this.sendSocketNotification(
-            'LOCAL_TRANSPORT_REQUEST', {
-                id: this.identifier,
-                url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
-            }
-        );*/
-        Log.info("requested public transport route");
         //request walking time
         if (this.config.displayAltWalk){
             this.config.mode = 'walking';
             this.sendRequest('LOCAL_TRANSPORT_WALK_REQUEST');
-            Log.info("requested walking route");
-            this.config.mode = 'transit';
         }
         //request cycling time
         if (this.config.displayAltCycle){
             this.config.mode = 'bicycling';
             this.sendRequest('LOCAL_TRANSPORT_CYCLE_REQUEST');
-            Log.info("requested cycling route");
-            this.config.mode = 'transit';
         }
         //request driving time
-        if (this.config.displayAltWalk){
+        if (this.config.displayAltDrive){
             this.config.mode = 'driving';
             this.sendRequest('LOCAL_TRANSPORT_DRIVE_REQUEST');
-            Log.info("requested driving route");
-            this.config.mode = 'transit';
         }
         if (this.config.debug){
             this.sendNotification("SHOW_ALERT", { timer: 3000, title: "LOCAL TRANSPORT", message: "special update"});
@@ -290,6 +279,21 @@ Module.register('MMM-LocalTransport', {
         }
         return li;
     },
+    receiveAlternative: function(notification, payload){
+        Log.info('received ' + notification);
+        var ans = ""
+        if(payload.data && payload.data.status === "OK"){
+            //only interested in duration, first option should be the shortest one
+            var route = payload.data.routes[0];
+            var leg = route.legs[0];
+            ans = leg.duration.value;
+        }else{
+            ans = "unknown";
+            Log.warning('received '+notification+' with status '+payload.data.status);
+        }
+        this.updateDom(this.config.animationSpeed * 1000);
+        return ans;
+    },
     socketNotificationReceived: function(notification, payload) {
         /*socketNotificationReceived
          *handles notifications send by this module
@@ -307,45 +311,15 @@ Module.register('MMM-LocalTransport', {
         }
         if (notification === 'LOCAL_TRANSPORT_WALK_RESPONSE' && payload.id === this.identifier) {
             //Received response on routes for walking
-            Log.info('received ' + notification);
-            if(payload.data && payload.data.status === "OK"){
-                //only interested in duration, first option should be the shortest one
-                var route = payload.data.routes[0];
-                var leg = route.legs[0];
-                this.config._walktime = leg.duration.value;
-                this.updateDom(this.config.animationSpeed * 1000);
-            }else{
-                this.config._walktime = "unknown";
-                Log.warning('received LOCAL_TRANSPORT_WALK_RESPONSE with status '+payload.data.status);
-            }
+            this.config._walktime = this.receiveAlternative(notification, payload);
         }
         if (notification === 'LOCAL_TRANSPORT_CYCLE_RESPONSE' && payload.id === this.identifier) {
             //Received response on routes for bicycle
-            Log.info('received ' + notification);
-            if(payload.data && payload.data.status === "OK"){
-                //only interested in duration, first option should be the shortest one
-                var route = payload.data.routes[0];
-                var leg = route.legs[0];
-                this.config._cycletime = leg.duration.value;
-                this.updateDom(this.config.animationSpeed * 1000);
-            }else{
-                this.config._cycletime = "unknown";
-                Log.warning('received LOCAL_TRANSPORT_CYCLE_RESPONSE with status '+payload.data.status);
-            }
+            this.config._cycletime = this.receiveAlternative(notification, payload);
         }
         if (notification === 'LOCAL_TRANSPORT_DRIVE_RESPONSE' && payload.id === this.identifier) {
             //Received response on routes for driving
-            Log.info('received ' + notification);
-            if(payload.data && payload.data.status === "OK"){
-                //only interested in duration, first option should be the shortest one
-                var route = payload.data.routes[0];
-                var leg = route.legs[0];
-                this.config._drivetime = leg.duration.value;
-                this.updateDom(this.config.animationSpeed * 1000);
-            }else{
-                this.config._drivetime = "unknown";
-                Log.warning('received LOCAL_TRANSPORT_DRIVE_RESPONSE with status '+payload.data.status);
-            }
+            this.config._drivetime = this.receiveAlternative(notification, payload);
         }
     },
     notificationReceived: function(notification, payload, sender) {
