@@ -426,7 +426,8 @@ Module.register('MMM-LocalTransport', {
         return {
             de: "i18n/de.json",
             en: "i18n/en.json",
-            sv: "i18n/sv.json"
+            sv: "i18n/sv.json",
+            fr: "i18n/fr.json"
         };
     },
     getDom: function() {
@@ -439,7 +440,7 @@ Module.register('MMM-LocalTransport', {
                 wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
             }else{
                 wrapper.innerHTML = this.translate(this.info.status);
-            }
+			}
             wrapper.className = "small dimmed";
         }else{
             /*create an unsorted list with each
