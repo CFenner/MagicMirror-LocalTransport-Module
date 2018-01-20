@@ -15,6 +15,7 @@ Module.register('MMM-LocalTransport', {
         displayAltWalk: false, //display info about how long walking would take
         displayAltCycle: false, //display info about how long cycling would take
         displayAltDrive: false, //display info about how long driving would take
+        displayAltTransit: false, //display info about how long public transport does take
         maxWalkTime: 10, //maximum acceptable walking time between stations
         fade: true, //apply fading effect
         fadePoint: 0.1,
@@ -34,6 +35,7 @@ Module.register('MMM-LocalTransport', {
         apiBase: 'https://maps.googleapis.com/',
         apiEndpoint: 'maps/api/directions/json',
         debug: false, 
+        ignoreErrors: ["OK","OVER_QUERY_LIMIT","UNKNOWN_ERROR"], //any of: OK, NOT_FOUND, ZERO_RESULTS, MAX_WAYPOINTS_EXCEEDED, INVALID_REQUEST, OVER_QUERY_LIMIT, REQUEST_DENIED, UNKNOWN_ERROR
         _laststop: '', //the variables with _ are for internal use only - should consider defining them elsewhere!
         _headerDest: '',
         _headerDestPlan: '',
@@ -46,7 +48,11 @@ Module.register('MMM-LocalTransport', {
     },
     start: function() {
         Log.info('Starting module: ' + this.name);
+        //default certain global variables
         this.loaded = false;
+        this.ignoredError = false;
+        this.transittime = 'unknown';
+        
         if (this.config.api_key === 'YOUR_API_KEY'){
             /*if there is no api key specified in the options of the module,
             look it up in the main config-file settings */
@@ -75,7 +81,7 @@ Module.register('MMM-LocalTransport', {
             if (this.config.debug){
               this.sendNotification("SHOW_ALERT", {timer: 3000, title: "LOCAL TRANSPORT", message: "normal update"});
             }
-            this.loaded = true;
+            //this.loaded = false;
             this.updateDom(); //this.updateDom(this.config.animationSpeed * 1000)
         }
     },
@@ -86,7 +92,7 @@ Module.register('MMM-LocalTransport', {
                 url: this.config.apiBase + this.config.apiEndpoint + this.getParams()
             }
         );
-        Log.info("requested "+requestName);
+        Log.log("requested "+requestName);
         this.config.mode = 'transit';
     },
     doMainUpdate: function() {
@@ -94,6 +100,7 @@ Module.register('MMM-LocalTransport', {
          *requests routes from Google for public transport and any alternatives if applicable.
          */
         //request routes from Google
+        this.loaded = false;
         this.sendRequest('LOCAL_TRANSPORT_REQUEST');
         //request walking time
         if (this.config.displayAltWalk){
@@ -242,6 +249,17 @@ Module.register('MMM-LocalTransport', {
             }
         }
     },
+    
+    renderAlternativeTime: function(time){
+        var span = document.createElement("span");
+        if(time != "unknown"){
+            span.innerHTML = this.convertTime(time);
+        }else{
+            span.innerHTML = "n/a";
+        }
+        return span;
+    },
+    
     renderAlternatives: function(){
         /*creates a <li> containing the duration for ALTERNATIVE transport methods*/
         var li = document.createElement("li");
@@ -252,46 +270,48 @@ Module.register('MMM-LocalTransport', {
         li.appendChild(span);
         /*add alternative walking time*/
         if (this.config.displayAltWalk){
-            //symbol for walking
             li.appendChild(this.getSymbol("walk"));
-            //actual walking time
-            var span = document.createElement("span");
-            span.innerHTML = this.convertTime(this.config._walktime);
+            var span = this.renderAlternativeTime(this.config._walktime)
             li.appendChild(span);
         }
         /*add alternative cycling time*/
         if (this.config.displayAltCycle){
-            //symbol for bicycle
             li.appendChild(this.getSymbol("cycle"));
-            //actual cycling time
-            var span = document.createElement("span");
-            span.innerHTML = this.convertTime(this.config._cycletime);
+            var span = this.renderAlternativeTime(this.config._cycletime);
+            li.appendChild(span);
+        }
+        /*add alternative driving time*/
+        if (this.config.displayAltTransit){
+            li.appendChild(this.getSymbol("rail"));
+            var span = this.renderAlternativeTime(this.transittime);
             li.appendChild(span);
         }
         /*add alternative driving time*/
         if (this.config.displayAltDrive){
-            //symbol for car
             li.appendChild(this.getSymbol("drive"));
-            //actual driving time
-            var span = document.createElement("span");
-            span.innerHTML = this.convertTime(this.config._drivetime);
+            var span = this.renderAlternativeTime(this.config._drivetime);
             li.appendChild(span);
         }
         return li;
     },
     receiveAlternative: function(notification, payload){
-        Log.info('received ' + notification);
         var ans = ""
         if(payload.data && payload.data.status === "OK"){
+            Log.log('received ' + notification);
             //only interested in duration, first option should be the shortest one
             var route = payload.data.routes[0];
             var leg = route.legs[0];
             ans = leg.duration.value;
         }else{
             ans = "unknown";
-            Log.warning('received '+notification+' with status '+payload.data.status);
+            var errlst = this.config.ignoreErrors
+            if (errlst.indexOf(payload.data.status) < 0){
+                Log.warn('received '+notification+' with status '+payload.data.status);
+            }else{
+                Log.info('received '+notification+' with status '+payload.data.status);
+            }
         }
-        this.updateDom(this.config.animationSpeed * 1000);
+        this.updateDom();
         return ans;
     },
     socketNotificationReceived: function(notification, payload) {
@@ -300,13 +320,32 @@ Module.register('MMM-LocalTransport', {
          */
         if (notification === 'LOCAL_TRANSPORT_RESPONSE' && payload.id === this.identifier) {
             //Received response on public transport routes (main one)
-            Log.info('received ' + notification);
+            
             if(payload.data && payload.data.status === "OK"){
+                Log.log('received ' + notification);
                 this.info = payload.data;
                 this.loaded = true;
+                this.ignoredError = false;
+                this.config._headerDestPlan = this.shortenAddress(this.config._destination);
+                this.transittime = this.receiveAlternative(notification, payload);
                 this.updateDom(this.config.animationSpeed * 1000);
+            }else if(!payload.data){
+                this.loaded = false;
+                this.ignoredError = false;
             }else{
-                Log.warning('received LOCAL_TRANSPORT_RESPONSE with status '+payload.data.status);
+                var errlst = this.config.ignoreErrors
+                if (this.info && errlst.indexOf(payload.data.status) >= 0){
+                   Log.info('received ' + notification + ' with status '+payload.data.status);
+                   this.ignoredError = true;
+                   this.loaded = true;
+                   this.updateDom(this.config.animationSpeed * 1000);
+                }else{
+                   Log.warn('received ' + notification + ' with status '+payload.data.status);
+                   this.ignoredError = false;
+                   this.info = payload.data;
+                   this.loaded = false;
+                   this.updateDom(this.config.animationSpeed * 1000);
+                }
             }
         }
         if (notification === 'LOCAL_TRANSPORT_WALK_RESPONSE' && payload.id === this.identifier) {
@@ -366,8 +405,11 @@ Module.register('MMM-LocalTransport', {
         //use %{destX} in the header definition for the module and it will be replaces with the destination as returned by Google
         header = header.replace("%{destX}", this.config._headerDest);
         //use %{dest} in the header definition for the module and it will be replaces with the destination as defined in the config/ calendar event
-        this.config._headerDestPlan = this.shortenAddress(this.config._destination);
-        header = header.replace("%{dest}", this.config._headerDestPlan);
+        if(!this.ignoredError){
+            header = header.replace("%{dest}", this.config._headerDestPlan);
+        }else{ //in case the last request returned an error an we use the previous data, then better use the destination of the last request as well.
+            header = header.replace("%{dest}", this.config._headerDest);
+        }
         //use %{orig} in the header definition for the module and it will be replaces with the origin as defined in the config
         this.config._headerOrigPlan = this.shortenAddress(this.config.origin);
         header = header.replace("%{orig}", this.config._headerOrigPlan);
@@ -389,10 +431,15 @@ Module.register('MMM-LocalTransport', {
     },
     getDom: function() {
         /* main function creating HTML code to display*/
+        this.config._headerDest = this.config._headerDestPlan; //resetting _headerDest in case there was an error loading...
         var wrapper = document.createElement("div");
-        if (!this.loaded) {
+        if (!this.loaded || !this.info) {
             /*if not loaded, display message*/
-            wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
+            if(!this.info){
+                wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
+            }else{
+                wrapper.innerHTML = this.translate(this.info.status);
+            }
             wrapper.className = "small dimmed";
         }else{
             /*create an unsorted list with each
@@ -414,9 +461,8 @@ Module.register('MMM-LocalTransport', {
                 }
                 for(var legKey in route.legs) {
                     var leg = route.legs[legKey];
-                    //Log.info(leg);
                     var tmpwrapper = document.createElement("text");
-                    this.config._headerdest = this.shortenAddress(leg.end_address);
+                    this.config._headerDest = this.shortenAddress(leg.end_address);
                     this.config._laststop = ''; //need to reset the _laststop in case the previous leg didn't end with a walking step.
                     try {
                         
