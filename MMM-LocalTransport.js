@@ -48,13 +48,13 @@ Module.register('MMM-LocalTransport', {
         //default certain global variables
         this.loaded = false;
         this.ignoredError = false;
-		this.altTimeWalk = 'unknown';
-		this.altTimeCycle = 'unknown';
+        this.altTimeWalk = 'unknown';
+        this.altTimeCycle = 'unknown';
         this.altTimeTransit = 'unknown';
-		this.altTimeDrive = 'unknown';
+        this.altTimeDrive = 'unknown';
         this.altSymbols = ['walk','cycle','rail','drive'];
-		this.altModes = ['walking','bicycling','transit','driving'];
-		
+        this.altModes = ['walking','bicycling','transit','driving'];
+        
         
         if (this.config.api_key === 'YOUR_API_KEY'){
             /*if there is no api key specified in the options of the module,
@@ -88,7 +88,8 @@ Module.register('MMM-LocalTransport', {
             this.updateDom(); //this.updateDom(this.config.animationSpeed * 1000)
         }
     },
-    sendRequest: function(requestName) {
+    sendRequest: function(requestName, mode) {
+        this.config.mode = mode;
         this.sendSocketNotification(
             requestName, {
                 id: this.identifier,
@@ -104,21 +105,18 @@ Module.register('MMM-LocalTransport', {
          */
         //request routes from Google
         this.loaded = false;
-        this.sendRequest('LOCAL_TRANSPORT_REQUEST');
+        this.sendRequest('LOCAL_TRANSPORT_REQUEST',this.config.mode);
         //request walking time
         if (this.config.displayAltWalk){
-            this.config.mode = 'walking';
-            this.sendRequest('LOCAL_TRANSPORT_WALK_REQUEST');
+            this.sendRequest('LOCAL_TRANSPORT_WALK_REQUEST','walking');
         }
         //request cycling time
         if (this.config.displayAltCycle){
-            this.config.mode = 'bicycling';
-            this.sendRequest('LOCAL_TRANSPORT_CYCLE_REQUEST');
+            this.sendRequest('LOCAL_TRANSPORT_CYCLE_REQUEST','bicycling');
         }
         //request driving time
         if (this.config.displayAltDrive){
-            this.config.mode = 'driving';
-            this.sendRequest('LOCAL_TRANSPORT_DRIVE_REQUEST');
+            this.sendRequest('LOCAL_TRANSPORT_DRIVE_REQUEST','driving');
         }
         if (this.config.debug){
             this.sendNotification("SHOW_ALERT", { timer: 3000, title: "LOCAL TRANSPORT", message: "special update"});
@@ -134,17 +132,6 @@ Module.register('MMM-LocalTransport', {
         params += '&departure_time=now';
         params += '&alternatives=true';
         return params;
-    },
-    getSymbol: function(symName){
-        var img = document.createElement("img");
-        if(this.config.showColor){
-            img.className = "symbol";
-        }else{
-            img.className = "symbol bw";
-        }
-        img.src = "https://maps.gstatic.com/mapfiles/transit/iw2/6/"+symName+".png";
-        //img.src = "/localtransport/"+symName+".png"; //needs to be saved in localtransport/public/walk.png
-        return img;
     },
     convertTime: function(seconds){
         var ans = moment.duration(seconds, 'seconds').locale(this.config.language).humanize();
@@ -164,15 +151,15 @@ Module.register('MMM-LocalTransport', {
         var span = document.createElement("div");
         span.className = "small bright";
         span.innerHTML = moment(depature).locale(this.config.language).fromNow();
-		if (this.config.displayArrival){
-			span.innerHTML += " ("+this.config.test+this.translate("ARRIVAL")+": ";
-			if (this.config.timeFormat === 24){
-				span.innerHTML += moment(arrival).format("H:mm");
-			}else{
-				span.innerHTML += moment(arrival).format("h:mm");
-			}
-			span.innerHTML += ")";
-		}
+        if (this.config.displayArrival){
+            span.innerHTML += " ("+this.config.test+this.translate("ARRIVAL")+": ";
+            if (this.config.timeFormat === 24){
+                span.innerHTML += moment(arrival).format("H:mm");
+            }else{
+                span.innerHTML += moment(arrival).format("h:mm");
+            }
+            span.innerHTML += ")";
+        }
         wrapper.appendChild(span);
     },
     renderStep: function(wrapper, step){
@@ -189,7 +176,7 @@ Module.register('MMM-LocalTransport', {
             }else if(this.config.displayWalkType != 'none'){
                 /*if walking and walking times should be
                  *specified, add symbol and time*/
-                wrapper.appendChild(this.getSymbol("walk"));
+                wrapper.appendChild(getSymbol("walk",this.config.showColor));
                 var span = document.createElement("span");
                 span.innerHTML = this.convertTime(duration);
                 if (this.config._laststop !== ''){
@@ -201,7 +188,7 @@ Module.register('MMM-LocalTransport', {
                     */
                    if (this.config.displayStationLength > 0){
                       /* add departure stop (shortened)*/
-                      span.innerHTML += " ("+this.translate("FROM")+" " + this.shorten(this.config._laststop, this.config.displayStationLength) + ")";
+                      span.innerHTML += " ("+this.translate("FROM")+" " + shorten(this.config._laststop, this.config.displayStationLength) + ")";
                    }else if (this.config.displayStationLength === 0){
                       /* add departure stop*/
                       span.innerHTML += " ("+this.translate("FROM")+" " + this.config._laststop + ")";
@@ -237,7 +224,7 @@ Module.register('MMM-LocalTransport', {
                 span.innerHTML = details.line.short_name || details.line.name;
                 if (this.config.displayStationLength > 0){
                     /* add departure stop (shortened)*/
-                    span.innerHTML += " ("+this.translate("FROM")+" " + this.shorten(details.departure_stop.name, this.config.displayStationLength) + ")";
+                    span.innerHTML += " ("+this.translate("FROM")+" " + shorten(details.departure_stop.name, this.config.displayStationLength) + ")";
                 }else if (this.config.displayStationLength === 0){
                     /* add departure stop*/
                     span.innerHTML += " ("+this.translate("FROM")+" " + details.departure_stop.name + ")";
@@ -277,45 +264,45 @@ Module.register('MMM-LocalTransport', {
         var timeAlt = [this.altTimeWalk,this.altTimeCycle,this.altTimeTransit,this.altTimeDrive];
         for (i = 0; i < displayAlt.length; i++) {
             if (displayAlt[i]){
-               li.appendChild(this.getSymbol(this.altSymbols[i]));
+               li.appendChild(getSymbol(this.altSymbols[i],this.config.showColor));
                var span = this.renderAlternativeTime(timeAlt[i]);
                li.appendChild(span);
             }
         }
         return li;
     },
-	receiveMain: function(notification, payload){
-	    if(payload.data && payload.data.status === "OK"){
-			//API request returned a result -> we are happy
-			Log.log('received ' + notification);
-			this.info = payload.data;
-			this.loaded = true;
-			this.ignoredError = false;
-			this.config._headerDestPlan = this.shortenAddress(this.config._destination);
-			this.altTimeTransit = this.receiveAlternative(notification, payload);
-			this.updateDom(this.config.animationSpeed * 1000);
-		}else if(!payload.data){
-		    //API request returned nothing
-			this.loaded = false;
-			this.ignoredError = false;
-		}else{
-		    //API request returned an error
-			var errlst = this.config.ignoreErrors
-			if (this.info && errlst.indexOf(payload.data.status) >= 0){
-				//API request returned an error but we have previous results
-				Log.info('received ' + notification + ' with status '+payload.data.status);
-				this.ignoredError = true;
-				this.loaded = true;
-			}else{
-				//API request returned an error so we don't have any routes to display -> show error
-				Log.warn('received ' + notification + ' with status '+payload.data.status);
-				this.ignoredError = false;
-				this.info = payload.data;
-				this.loaded = false;
-			}
-			this.updateDom(this.config.animationSpeed * 1000);
-		}
-	},
+    receiveMain: function(notification, payload){
+        if(payload.data && payload.data.status === "OK"){
+            //API request returned a result -> we are happy
+            Log.log('received ' + notification);
+            this.info = payload.data;
+            this.loaded = true;
+            this.ignoredError = false;
+            this.config._headerDestPlan = shortenAddress(this.config._destination);
+            this.altTimeTransit = this.receiveAlternative(notification, payload);
+            this.updateDom(this.config.animationSpeed * 1000);
+        }else if(!payload.data){
+            //API request returned nothing
+            this.loaded = false;
+            this.ignoredError = false;
+        }else{
+            //API request returned an error
+            var errlst = this.config.ignoreErrors
+            if (this.info && errlst.indexOf(payload.data.status) >= 0){
+                //API request returned an error but we have previous results and permission to ignore it
+                Log.info('received ' + notification + ' with status '+payload.data.status);
+                this.ignoredError = true;
+                this.loaded = true;
+            }else{
+                //API request returned an error so we don't have any routes to display -> show error
+                Log.warn('received ' + notification + ' with status '+payload.data.status);
+                this.ignoredError = false;
+                this.info = payload.data;
+                this.loaded = false;
+            }
+            this.updateDom(this.config.animationSpeed * 1000);
+        }
+    },
     receiveAlternative: function(notification, payload){
         var ans = ""
         if(payload.data && payload.data.status === "OK"){
@@ -341,69 +328,69 @@ Module.register('MMM-LocalTransport', {
          *handles notifications send by this module
          */
         if (payload.id === this.identifier){
-			switch(notification){
-				case 'LOCAL_TRANSPORT_RESPONSE':
-					//Received response on public transport routes (main one)
-					this.receiveMain(notification, payload);
-					break;
-				case 'LOCAL_TRANSPORT_WALK_RESPONSE':
-					//Received response on walking alternative
-					this.altTimeWalk = this.receiveAlternative(notification, payload);
-					break;
-				case 'LOCAL_TRANSPORT_CYCLE_RESPONSE':
-					//Received response on cycling alternative
-					this.altTimeCycle = this.receiveAlternative(notification, payload);
-					break;
-				case 'LOCAL_TRANSPORT_DRIVE_RESPONSE':
-					//Received response on driving alternative
-					this.altTimeDrive = this.receiveAlternative(notification, payload);
-			}
-			/*
-			//Received response on public transport routes (main one)
-			if (notification === 'LOCAL_TRANSPORT_RESPONSE') {
-				this.receiveMain(notification, payload);
-			}
-			//Received response on alternative routes
-			if (notification === 'LOCAL_TRANSPORT_WALK_RESPONSE') {
-				this.altTimeWalk = this.receiveAlternative(notification, payload);
-			}
-			if (notification === 'LOCAL_TRANSPORT_CYCLE_RESPONSE') {
-				this.altTimeCycle = this.receiveAlternative(notification, payload);
-			}
-			if (notification === 'LOCAL_TRANSPORT_DRIVE_RESPONSE') {
-				this.altTimeDrive = this.receiveAlternative(notification, payload);
-			}*/
+            switch(notification){
+                case 'LOCAL_TRANSPORT_RESPONSE':
+                    //Received response on public transport routes (main one)
+                    this.receiveMain(notification, payload);
+                    break;
+                case 'LOCAL_TRANSPORT_WALK_RESPONSE':
+                    //Received response on walking alternative
+                    this.altTimeWalk = this.receiveAlternative(notification, payload);
+                    break;
+                case 'LOCAL_TRANSPORT_CYCLE_RESPONSE':
+                    //Received response on cycling alternative
+                    this.altTimeCycle = this.receiveAlternative(notification, payload);
+                    break;
+                case 'LOCAL_TRANSPORT_DRIVE_RESPONSE':
+                    //Received response on driving alternative
+                    this.altTimeDrive = this.receiveAlternative(notification, payload);
+            }
+            /*
+            //Received response on public transport routes (main one)
+            if (notification === 'LOCAL_TRANSPORT_RESPONSE') {
+                this.receiveMain(notification, payload);
+            }
+            //Received response on alternative routes
+            if (notification === 'LOCAL_TRANSPORT_WALK_RESPONSE') {
+                this.altTimeWalk = this.receiveAlternative(notification, payload);
+            }
+            if (notification === 'LOCAL_TRANSPORT_CYCLE_RESPONSE') {
+                this.altTimeCycle = this.receiveAlternative(notification, payload);
+            }
+            if (notification === 'LOCAL_TRANSPORT_DRIVE_RESPONSE') {
+                this.altTimeDrive = this.receiveAlternative(notification, payload);
+            }*/
         }
     },
-	calendarReceived: function(notification, payload, sender) {
-		//received calendar events AND user wants events to influence the travel destination.
-		Log.info('received ' + notification);
-		var dn = new Date();
-		var oneSecond = 1000; // 1,000 milliseconds
-		var oneMinute = oneSecond * 60;
-		var oneHour = oneMinute * 60;
-		var oneDay = oneHour * 24;
-		
-		var value;
-		for (let x of payload) {
-		  //go through the events, pick first one with a set location.
-		  //also ignore running events
-		  if(x.location !== '' && x.location !== false && x.startDate - dn >= 0){
-			  value = x;
-			  break;
-		  }
-		}
-		//check if event is less than one day away
-		if(value.startDate - dn - oneDay <= 0){
-			//if so, then update the destination and request an update of the routes
-			this.config._destination = value.location;
-			this.doMainUpdate();
-			this.lastupdate = dn.getTime();
-		}else{
-			//if not, then make sure the default destination is set again.
-			this.config._destination = this.config.destination;
-		}
-	},
+    calendarReceived: function(notification, payload, sender) {
+        //received calendar events AND user wants events to influence the travel destination.
+        Log.info('received ' + notification);
+        var dn = new Date();
+        var oneSecond = 1000; // 1,000 milliseconds
+        var oneMinute = oneSecond * 60;
+        var oneHour = oneMinute * 60;
+        var oneDay = oneHour * 24;
+        
+        var value;
+        for (let x of payload) {
+          //go through the events, pick first one with a set location.
+          //also ignore running events
+          if(x.location !== '' && x.location !== false && x.startDate - dn >= 0){
+              value = x;
+              break;
+          }
+        }
+        //check if event is less than one day away
+        if(value.startDate - dn - oneDay <= 0){
+            //if so, then update the destination and request an update of the routes
+            this.config._destination = value.location;
+            this.doMainUpdate();
+            this.lastupdate = dn.getTime();
+        }else{
+            //if not, then make sure the default destination is set again.
+            this.config._destination = this.config.destination;
+        }
+    },
     notificationReceived: function(notification, payload, sender) {
         /*notificationReceived
          *handles notifications send by other modules
@@ -423,7 +410,7 @@ Module.register('MMM-LocalTransport', {
             header = header.replace("%{dest}", this.config._headerDest);
         }
         //use %{orig} in the header definition for the module and it will be replaces with the origin as defined in the config
-        this.config._headerOrigPlan = this.shortenAddress(this.config.origin);
+        this.config._headerOrigPlan = shortenAddress(this.config.origin);
         header = header.replace("%{orig}", this.config._headerOrigPlan);
     
         return header;
@@ -432,7 +419,7 @@ Module.register('MMM-LocalTransport', {
         return ["localtransport.css"];
     },
     getScripts: function() {
-        return ["moment.js"];
+        return ["moment.js","helper.js"];
     },
     getTranslations: function() {
         return {
@@ -452,7 +439,7 @@ Module.register('MMM-LocalTransport', {
                 wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
             }else{
                 wrapper.innerHTML = this.translate(this.info.status);
-			}
+            }
             wrapper.className = "small dimmed";
         }else{
             /*create an unsorted list with each
@@ -471,7 +458,7 @@ Module.register('MMM-LocalTransport', {
                 for(var legKey in route.legs) {
                     var leg = route.legs[legKey];
                     var tmpwrapper = document.createElement("text");
-                    this.config._headerDest = this.shortenAddress(leg.end_address);
+                    this.config._headerDest = shortenAddress(leg.end_address);
                     this.config._laststop = ''; //need to reset the _laststop in case the previous leg didn't end with a walking step.
                     try {
                         arrival = leg.arrival_time.value;
@@ -541,24 +528,6 @@ Module.register('MMM-LocalTransport', {
             wrapper.appendChild(ul);
         }
         return wrapper;
-    },
-    shorten: function(string, maxLength) {
-        /*shorten
-         *shortens a string to the number of characters specified*/
-        if (string.length > maxLength) {
-            return string.slice(0,maxLength) + "&hellip;";
-        }
-        return string;
-    },
-    shortenAddress: function(address) {
-        /*shortenAddress
-         *shortens a string to the first part of an address
-         *this assumes that the address string is split by ','
-         *useful since Google will require a very precise 
-         *definition of an address while the user would usually
-         *know which city and country they are looking at*/
-        var temp = address.split(",");
-        return temp[0];
     }
 
 });
