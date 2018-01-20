@@ -341,6 +341,24 @@ Module.register('MMM-LocalTransport', {
          *handles notifications send by this module
          */
         if (payload.id === this.identifier){
+			switch(notification){
+				case 'LOCAL_TRANSPORT_RESPONSE':
+					//Received response on public transport routes (main one)
+					this.receiveMain(notification, payload);
+					break;
+				case 'LOCAL_TRANSPORT_WALK_RESPONSE':
+					//Received response on walking alternative
+					this.altTimeWalk = this.receiveAlternative(notification, payload);
+					break;
+				case 'LOCAL_TRANSPORT_CYCLE_RESPONSE':
+					//Received response on cycling alternative
+					this.altTimeCycle = this.receiveAlternative(notification, payload);
+					break;
+				case 'LOCAL_TRANSPORT_DRIVE_RESPONSE':
+					//Received response on driving alternative
+					this.altTimeDrive = this.receiveAlternative(notification, payload);
+			}
+			/*
 			//Received response on public transport routes (main one)
 			if (notification === 'LOCAL_TRANSPORT_RESPONSE') {
 				this.receiveMain(notification, payload);
@@ -354,7 +372,7 @@ Module.register('MMM-LocalTransport', {
 			}
 			if (notification === 'LOCAL_TRANSPORT_DRIVE_RESPONSE') {
 				this.altTimeDrive = this.receiveAlternative(notification, payload);
-			}
+			}*/
         }
     },
 	calendarReceived: function(notification, payload, sender) {
