@@ -284,6 +284,38 @@ Module.register('MMM-LocalTransport', {
         }
         return li;
     },
+	receiveMain: function(notification, payload){
+	    if(payload.data && payload.data.status === "OK"){
+			//API request returned a result -> we are happy
+			Log.log('received ' + notification);
+			this.info = payload.data;
+			this.loaded = true;
+			this.ignoredError = false;
+			this.config._headerDestPlan = this.shortenAddress(this.config._destination);
+			this.altTimeTransit = this.receiveAlternative(notification, payload);
+			this.updateDom(this.config.animationSpeed * 1000);
+		}else if(!payload.data){
+		    //API request returned nothing
+			this.loaded = false;
+			this.ignoredError = false;
+		}else{
+		    //API request returned an error
+			var errlst = this.config.ignoreErrors
+			if (this.info && errlst.indexOf(payload.data.status) >= 0){
+				//API request returned an error but we have previous results
+				Log.info('received ' + notification + ' with status '+payload.data.status);
+				this.ignoredError = true;
+				this.loaded = true;
+			}else{
+				//API request returned an error so we don't have any routes to display -> show error
+				Log.warn('received ' + notification + ' with status '+payload.data.status);
+				this.ignoredError = false;
+				this.info = payload.data;
+				this.loaded = false;
+			}
+			this.updateDom(this.config.animationSpeed * 1000);
+		}
+	},
     receiveAlternative: function(notification, payload){
         var ans = ""
         if(payload.data && payload.data.status === "OK"){
@@ -311,32 +343,7 @@ Module.register('MMM-LocalTransport', {
         if (payload.id === this.identifier){
 			//Received response on public transport routes (main one)
 			if (notification === 'LOCAL_TRANSPORT_RESPONSE') {
-				if(payload.data && payload.data.status === "OK"){
-					Log.log('received ' + notification);
-					this.info = payload.data;
-					this.loaded = true;
-					this.ignoredError = false;
-					this.config._headerDestPlan = this.shortenAddress(this.config._destination);
-					this.altTimeTransit = this.receiveAlternative(notification, payload);
-					this.updateDom(this.config.animationSpeed * 1000);
-				}else if(!payload.data){
-					this.loaded = false;
-					this.ignoredError = false;
-				}else{
-					var errlst = this.config.ignoreErrors
-					if (this.info && errlst.indexOf(payload.data.status) >= 0){
-					   Log.info('received ' + notification + ' with status '+payload.data.status);
-					   this.ignoredError = true;
-					   this.loaded = true;
-					   this.updateDom(this.config.animationSpeed * 1000);
-					}else{
-					   Log.warn('received ' + notification + ' with status '+payload.data.status);
-					   this.ignoredError = false;
-					   this.info = payload.data;
-					   this.loaded = false;
-					   this.updateDom(this.config.animationSpeed * 1000);
-					}
-				}
+				this.receiveMain(notification, payload);
 			}
 			//Received response on alternative routes
 			if (notification === 'LOCAL_TRANSPORT_WALK_RESPONSE') {
@@ -350,43 +357,41 @@ Module.register('MMM-LocalTransport', {
 			}
         }
     },
+	calendarReceived: function(notification, payload, sender) {
+		//received calendar events AND user wants events to influence the travel destination.
+		Log.info('received ' + notification);
+		var dn = new Date();
+		var oneSecond = 1000; // 1,000 milliseconds
+		var oneMinute = oneSecond * 60;
+		var oneHour = oneMinute * 60;
+		var oneDay = oneHour * 24;
+		
+		var value;
+		for (let x of payload) {
+		  //go through the events, pick first one with a set location.
+		  //also ignore running events
+		  if(x.location !== '' && x.location !== false && x.startDate - dn >= 0){
+			  value = x;
+			  break;
+		  }
+		}
+		//check if event is less than one day away
+		if(value.startDate - dn - oneDay <= 0){
+			//if so, then update the destination and request an update of the routes
+			this.config._destination = value.location;
+			this.doMainUpdate();
+			this.lastupdate = dn.getTime();
+		}else{
+			//if not, then make sure the default destination is set again.
+			this.config._destination = this.config.destination;
+		}
+	},
     notificationReceived: function(notification, payload, sender) {
         /*notificationReceived
          *handles notifications send by other modules
          */
         if (notification === 'CALENDAR_EVENTS' && sender.name === 'calendar' && this.config.getCalendarLocation) {
-            //received calendar events AND user wants events to influence the travel destination.
-            Log.info('received ' + notification);
-            var dn = new Date();
-            var oneSecond = 1000; // 1,000 milliseconds
-            var oneMinute = oneSecond * 60;
-            var oneHour = oneMinute * 60;
-            var oneDay = oneHour * 24;
-            
-            var value;
-            for (let x of payload) {
-              //go through the events, pick first one with a set location.
-              //also ignore running events
-              if(x.location !== '' && x.location !== false && x.startDate - dn >= 0){
-                  value = x;
-                  break;
-              }
-            }
-            //check if event is less than one day away
-            if(value.startDate - dn - oneDay <= 0){
-                //if so, then update the destination and request an update of the routes
-                this.config._destination = value.location;
-                this.doMainUpdate();
-                this.lastupdate = dn.getTime();
-            }else{
-                //if not, then make sure the default destination is set again.
-                this.config._destination = this.config.destination;
-            }
-            
-            if (this.config.debug){
-              this.sendNotification("SHOW_ALERT", { timer: 3000, title: "LOCAL TRANSPORT", message: "calendar update"});
-            }
-            
+            this.calendarReceived(notification, payload, sender);
         }
     },
     getHeader: function() {
