@@ -141,27 +141,7 @@ Module.register('MMM-LocalTransport', {
             ans = ans.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
         }
         return ans;
-    },/*
-    renderLeg: function(wrapper, leg){
-        /* renderLeg
-         * creates HTML element for one leg of a route
-         */
-/*        var depature = leg.departure_time.value * 1000;
-        var arrival = leg.arrival_time.value * 1000;
-        var span = document.createElement("div");
-        span.className = "small bright";
-        span.innerHTML = moment(depature).locale(this.config.language).fromNow();
-        if (this.config.displayArrival){
-            span.innerHTML += " ("+this.config.test+this.translate("ARRIVAL")+": ";
-            if (this.config.timeFormat === 24){
-                span.innerHTML += moment(arrival).format("H:mm");
-            }else{
-                span.innerHTML += moment(arrival).format("h:mm");
-            }
-            span.innerHTML += ")";
-        }
-        wrapper.appendChild(span);
-    },*/
+    },
     renderStep: function(wrapper, step){
         /* renderStep
          * creates HTML element for one step of a leg
@@ -187,13 +167,6 @@ Module.register('MMM-LocalTransport', {
                     step (alternatively one could display the departure location specified by the user, but I prefer this option)
                     */
                    renderDeparture(span, this.config._laststop, this.translate("FROM"), this.config);
-                   //if (this.config.displayStationLength > 0){
-                   //   /* add departure stop (shortened)*/
-                   //   span.innerHTML += " ("+this.translate("FROM")+" " + shorten(this.config._laststop, this.config.displayStationLength) + ")";
-                   //}else if (this.config.displayStationLength === 0){
-                   //   /* add departure stop*/
-                   //   span.innerHTML += " ("+this.translate("FROM")+" " + this.config._laststop + ")";
-                   //}
                 }
                 span.className = "xsmall dimmed";
                 wrapper.appendChild(span);
@@ -224,13 +197,6 @@ Module.register('MMM-LocalTransport', {
                 /* add line name*/
                 span.innerHTML = details.line.short_name || details.line.name;
                 renderDeparture(span, details.departure_stop.name, this.translate("FROM"), this.config);
-                //if (this.config.displayStationLength > 0){
-                //    /* add departure stop (shortened)*/
-                //    span.innerHTML += " ("+this.translate("FROM")+" " + shorten(details.departure_stop.name, this.config.displayStationLength) + ")";
-                //}else if (this.config.displayStationLength === 0){
-                //    /* add departure stop*/
-                //    span.innerHTML += " ("+this.translate("FROM")+" " + details.departure_stop.name + ")";
-                //}
                 if (this.config.debug){
                     /* add vehicle type for debug*/
                     span.innerHTML += " [" + details.line.vehicle.name +"]";
@@ -347,21 +313,6 @@ Module.register('MMM-LocalTransport', {
                     //Received response on driving alternative
                     this.altTimeDrive = this.receiveAlternative(notification, payload);
             }
-            /*
-            //Received response on public transport routes (main one)
-            if (notification === 'LOCAL_TRANSPORT_RESPONSE') {
-                this.receiveMain(notification, payload);
-            }
-            //Received response on alternative routes
-            if (notification === 'LOCAL_TRANSPORT_WALK_RESPONSE') {
-                this.altTimeWalk = this.receiveAlternative(notification, payload);
-            }
-            if (notification === 'LOCAL_TRANSPORT_CYCLE_RESPONSE') {
-                this.altTimeCycle = this.receiveAlternative(notification, payload);
-            }
-            if (notification === 'LOCAL_TRANSPORT_DRIVE_RESPONSE') {
-                this.altTimeDrive = this.receiveAlternative(notification, payload);
-            }*/
         }
     },
     calendarReceived: function(notification, payload, sender) {
