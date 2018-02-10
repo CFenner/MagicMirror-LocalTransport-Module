@@ -141,12 +141,12 @@ Module.register('MMM-LocalTransport', {
             ans = ans.replace(this.translate("SECOND_PL"),this.translate("SECOND_PS"));
         }
         return ans;
-    },
+    },/*
     renderLeg: function(wrapper, leg){
         /* renderLeg
          * creates HTML element for one leg of a route
          */
-        var depature = leg.departure_time.value * 1000;
+/*        var depature = leg.departure_time.value * 1000;
         var arrival = leg.arrival_time.value * 1000;
         var span = document.createElement("div");
         span.className = "small bright";
@@ -161,7 +161,7 @@ Module.register('MMM-LocalTransport', {
             span.innerHTML += ")";
         }
         wrapper.appendChild(span);
-    },
+    },*/
     renderStep: function(wrapper, step){
         /* renderStep
          * creates HTML element for one step of a leg
@@ -186,13 +186,14 @@ Module.register('MMM-LocalTransport', {
                     to not cause interference between different routes and we need to skip the display for the first step if that is a walking
                     step (alternatively one could display the departure location specified by the user, but I prefer this option)
                     */
-                   if (this.config.displayStationLength > 0){
-                      /* add departure stop (shortened)*/
-                      span.innerHTML += " ("+this.translate("FROM")+" " + shorten(this.config._laststop, this.config.displayStationLength) + ")";
-                   }else if (this.config.displayStationLength === 0){
-                      /* add departure stop*/
-                      span.innerHTML += " ("+this.translate("FROM")+" " + this.config._laststop + ")";
-                   }
+                   renderDeparture(span, this.config._laststop, this.translate("FROM"), this.config);
+                   //if (this.config.displayStationLength > 0){
+                   //   /* add departure stop (shortened)*/
+                   //   span.innerHTML += " ("+this.translate("FROM")+" " + shorten(this.config._laststop, this.config.displayStationLength) + ")";
+                   //}else if (this.config.displayStationLength === 0){
+                   //   /* add departure stop*/
+                   //   span.innerHTML += " ("+this.translate("FROM")+" " + this.config._laststop + ")";
+                   //}
                 }
                 span.className = "xsmall dimmed";
                 wrapper.appendChild(span);
@@ -222,13 +223,14 @@ Module.register('MMM-LocalTransport', {
                 var span = document.createElement("span");
                 /* add line name*/
                 span.innerHTML = details.line.short_name || details.line.name;
-                if (this.config.displayStationLength > 0){
-                    /* add departure stop (shortened)*/
-                    span.innerHTML += " ("+this.translate("FROM")+" " + shorten(details.departure_stop.name, this.config.displayStationLength) + ")";
-                }else if (this.config.displayStationLength === 0){
-                    /* add departure stop*/
-                    span.innerHTML += " ("+this.translate("FROM")+" " + details.departure_stop.name + ")";
-                }
+                renderDeparture(span, details.departure_stop.name, this.translate("FROM"), this.config);
+                //if (this.config.displayStationLength > 0){
+                //    /* add departure stop (shortened)*/
+                //    span.innerHTML += " ("+this.translate("FROM")+" " + shorten(details.departure_stop.name, this.config.displayStationLength) + ")";
+                //}else if (this.config.displayStationLength === 0){
+                //    /* add departure stop*/
+                //    span.innerHTML += " ("+this.translate("FROM")+" " + details.departure_stop.name + ")";
+                //}
                 if (this.config.debug){
                     /* add vehicle type for debug*/
                     span.innerHTML += " [" + details.line.vehicle.name +"]";
@@ -423,8 +425,8 @@ Module.register('MMM-LocalTransport', {
     },
     getTranslations: function() {
         return {
-            de: "i18n/de.json",
             en: "i18n/en.json",
+            de: "i18n/de.json",
             sv: "i18n/sv.json",
             fr: "i18n/fr.json"
         };
@@ -469,6 +471,7 @@ Module.register('MMM-LocalTransport', {
                                    (3) walk from C to Z*/
                             var step = leg.steps[stepKey];
                             this.renderStep(tmpwrapper, step);
+                            //renderStep(tmpwrapper, step, this.translate("FROM"), config);
                             if (tmpwrapper.innerHTML === "too far"){
                                 //walking distance was too long -> skip this option
                                 break;
@@ -483,7 +486,8 @@ Module.register('MMM-LocalTransport', {
                         li.innerHTML = "too far";
                         break;
                     }
-                    this.renderLeg(li, leg);
+                    //this.renderLeg(li, leg);
+                    renderLeg(li, leg, this.translate("ARRIVAL"), this.config, );
                     li.appendChild(tmpwrapper);
                 }
                 if (li.innerHTML !== "too far"){
