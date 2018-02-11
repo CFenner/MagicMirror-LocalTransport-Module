@@ -240,6 +240,7 @@ Module.register('MMM-LocalTransport', {
         return li;
     },
     receiveMain: function(notification, payload){
+        var errlst = this.config.ignoreErrors;
         if(payload.data && payload.data.status === "OK"){
             //API request returned a result -> we are happy
             Log.log('received ' + notification);
@@ -247,49 +248,27 @@ Module.register('MMM-LocalTransport', {
             this.loaded = true;
             this.ignoredError = false;
             this.config._headerDestPlan = shortenAddress(this.config._destination);
-            this.altTimeTransit = this.receiveAlternative(notification, payload);
+            //this.altTimeTransit = this.receiveAlternative(notification, payload);
+            this.altTimeTransit = receiveAlternative(notification, payload, this.config.ignoreErrors);
             this.updateDom(this.config.animationSpeed * 1000);
         }else if(!payload.data){
             //API request returned nothing
             this.loaded = false;
             this.ignoredError = false;
+        }else if(this.info && errlst.indexOf(payload.data.status) >= 0){
+            //API request returned an error but we have previous results and permission to ignore it
+            Log.info('received ' + notification + ' with status '+payload.data.status);
+            this.ignoredError = true;
+            this.loaded = true;
+            this.updateDom(this.config.animationSpeed * 1000);
         }else{
-            //API request returned an error
-            var errlst = this.config.ignoreErrors
-            if (this.info && errlst.indexOf(payload.data.status) >= 0){
-                //API request returned an error but we have previous results and permission to ignore it
-                Log.info('received ' + notification + ' with status '+payload.data.status);
-                this.ignoredError = true;
-                this.loaded = true;
-            }else{
-                //API request returned an error so we don't have any routes to display -> show error
-                Log.warn('received ' + notification + ' with status '+payload.data.status);
-                this.ignoredError = false;
-                this.info = payload.data;
-                this.loaded = false;
-            }
+            //API request returned an error so we don't have any routes to display -> show error
+            Log.warn('received ' + notification + ' with status '+payload.data.status);
+            this.ignoredError = false;
+            this.info = payload.data;
+            this.loaded = false;
             this.updateDom(this.config.animationSpeed * 1000);
         }
-    },
-    receiveAlternative: function(notification, payload){
-        var ans = ""
-        if(payload.data && payload.data.status === "OK"){
-            Log.log('received ' + notification);
-            //only interested in duration, first option should be the shortest one
-            var route = payload.data.routes[0];
-            var leg = route.legs[0];
-            ans = leg.duration.value;
-        }else{
-            ans = "unknown";
-            var errlst = this.config.ignoreErrors
-            if (errlst.indexOf(payload.data.status) < 0){
-                Log.warn('received '+notification+' with status '+payload.data.status);
-            }else{
-                Log.info('received '+notification+' with status '+payload.data.status);
-            }
-        }
-        this.updateDom();
-        return ans;
     },
     socketNotificationReceived: function(notification, payload) {
         /*socketNotificationReceived
@@ -303,15 +282,21 @@ Module.register('MMM-LocalTransport', {
                     break;
                 case 'LOCAL_TRANSPORT_WALK_RESPONSE':
                     //Received response on walking alternative
-                    this.altTimeWalk = this.receiveAlternative(notification, payload);
+                    //this.altTimeWalk = this.receiveAlternative(notification, payload);
+                    this.altTimeWalk = receiveAlternative(notification, payload, this.config.ignoreErrors);
+                    this.updateDom();
                     break;
                 case 'LOCAL_TRANSPORT_CYCLE_RESPONSE':
                     //Received response on cycling alternative
-                    this.altTimeCycle = this.receiveAlternative(notification, payload);
+                    //this.altTimeCycle = this.receiveAlternative(notification, payload);
+                    this.altTimeCycle = receiveAlternative(notification, payload, this.config.ignoreErrors);
+                    this.updateDom();
                     break;
                 case 'LOCAL_TRANSPORT_DRIVE_RESPONSE':
                     //Received response on driving alternative
-                    this.altTimeDrive = this.receiveAlternative(notification, payload);
+                    //this.altTimeDrive = this.receiveAlternative(notification, payload);
+                    this.altTimeDrive = receiveAlternative(notification, payload, this.config.ignoreErrors);
+                    this.updateDom();
             }
         }
     },

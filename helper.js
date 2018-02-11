@@ -35,6 +35,26 @@ function shortenAddress(address) {
     return temp[0];
 }
 
+function receiveAlternative(notification, payload, ignoreErrors){
+        var ans = ""
+        if(payload.data && payload.data.status === "OK"){
+            Log.log('received ' + notification);
+            //only interested in duration, first option should be the shortest one
+            var route = payload.data.routes[0];
+            var leg = route.legs[0];
+            ans = leg.duration.value;
+        }else{
+            ans = "unknown";
+            var errlst = ignoreErrors;
+            if (errlst.indexOf(payload.data.status) < 0){
+                Log.warn('received '+notification+' with status '+payload.data.status);
+            }else{
+                Log.info('received '+notification+' with status '+payload.data.status);
+            }
+        }
+        return ans;
+}
+
 function renderLeg(wrapper, leg, arrivalWord, config){
         /* renderLeg
          * creates HTML element for one leg of a route
