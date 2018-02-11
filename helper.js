@@ -36,21 +36,18 @@ function shortenAddress(address) {
 }
 
 function receiveAlternative(notification, payload, ignoreErrors){
-        var ans = ""
+        var ans = "unknown";
+        var errlst = ignoreErrors;
         if(payload.data && payload.data.status === "OK"){
             Log.log('received ' + notification);
             //only interested in duration, first option should be the shortest one
             var route = payload.data.routes[0];
             var leg = route.legs[0];
             ans = leg.duration.value;
+        }else if (errlst.indexOf(payload.data.status) < 0){
+            Log.warn('received '+notification+' with status '+payload.data.status);
         }else{
-            ans = "unknown";
-            var errlst = ignoreErrors;
-            if (errlst.indexOf(payload.data.status) < 0){
-                Log.warn('received '+notification+' with status '+payload.data.status);
-            }else{
-                Log.info('received '+notification+' with status '+payload.data.status);
-            }
+            Log.info('received '+notification+' with status '+payload.data.status);
         }
         return ans;
 }
@@ -84,6 +81,32 @@ function renderDeparture(span, departureStop, fromWord, config){
         /* add departure stop*/
         span.innerHTML += " ("+fromWord+" " + config._laststop + ")";
     }
+}
+
+function renderFade(routeArray,config){
+    /*create fade effect and append list items to the list*/
+    var ul = document.createElement("ul");
+    var e = 0;
+    var Nrs = routeArray.length;
+    for(var dataKey in routeArray) {
+        var routeData = routeArray[dataKey];
+        var routeHtml = routeData.html;
+        // Create fade effect.
+        if (config.fade && config.fadePoint < 1) {
+                    if (config.fadePoint < 0) {
+                        config.fadePoint = 0;
+                    }
+                    var startingPoint = Nrs * config.fadePoint;
+                    var steps = Nrs - startingPoint;
+                    if (e >= startingPoint) {
+                        var currentStep = e - startingPoint;
+                        routeHtml.style.opacity = 1 - (1 / steps * currentStep);
+                    }
+        }
+        ul.appendChild(routeHtml);
+        e += 1;
+    }
+    return ul
 }
 
 //function renderStep(wrapper, step, fromWord, config){

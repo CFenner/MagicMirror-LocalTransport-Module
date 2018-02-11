@@ -301,13 +301,12 @@ Module.register('MMM-LocalTransport', {
         }
     },
     calendarReceived: function(notification, payload, sender) {
-        //received calendar events AND user wants events to influence the travel destination.
         Log.info('received ' + notification);
         var dn = new Date();
-        var oneSecond = 1000; // 1,000 milliseconds
-        var oneMinute = oneSecond * 60;
-        var oneHour = oneMinute * 60;
-        var oneDay = oneHour * 24;
+        //var oneSecond = 1000; // 1,000 milliseconds
+        //var oneMinute = oneSecond * 60;
+        //var oneHour = oneMinute * 60;
+        var oneDay = 1000 * 60 * 60 * 24;
         
         var value;
         for (let x of payload) {
@@ -334,6 +333,7 @@ Module.register('MMM-LocalTransport', {
          *handles notifications send by other modules
          */
         if (notification === 'CALENDAR_EVENTS' && sender.name === 'calendar' && this.config.getCalendarLocation) {
+            //received calendar events AND user wants events to influence the travel destination.
             this.calendarReceived(notification, payload, sender);
         }
     },
@@ -371,18 +371,23 @@ Module.register('MMM-LocalTransport', {
         /* main function creating HTML code to display*/
         this.config._headerDest = this.config._headerDestPlan; //resetting _headerDest in case there was an error loading...
         var wrapper = document.createElement("div");
-        if (!this.loaded || !this.info) {
-            /*if not loaded, display message*/
+        /*if (!this.loaded || !this.info) {
             if(!this.info){
                 wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
             }else{
                 wrapper.innerHTML = this.translate(this.info.status);
             }
+            wrapper.className = "small dimmed";*/
+        if (!this.loaded && !this.info) {
+            /*if not loaded, display message*/
+            wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
+            wrapper.className = "small dimmed";
+        }else if (!this.loaded){
+            /*if not loaded, display message*/
+            wrapper.innerHTML = this.translate(this.info.status);
             wrapper.className = "small dimmed";
         }else{
-            /*create an unsorted list with each
-             *route alternative being a new list item*/
-            var ul = document.createElement("ul");
+            /*we have routes -> render them*/
             var routeArray = []; //array of all alternatives for later sorting
             for(var routeKey in this.info.routes) {
                 /*each route describes a way to get from A to Z*/
@@ -443,28 +448,13 @@ Module.register('MMM-LocalTransport', {
                 var li = this.renderAlternatives();
                 routeArray.push({"arrival":'',"html":li});
             }
+            
+            /*create an unsorted list with each
+             *route alternative being a new list item*/
+            //var ul = document.createElement("ul");
 
             /*create fade effect and append list items to the list*/
-            var e = 0;
-            var Nrs = routeArray.length;
-            for(var dataKey in routeArray) {
-                var routeData = routeArray[dataKey];
-                var routeHtml = routeData.html;
-                // Create fade effect.
-                if (this.config.fade && this.config.fadePoint < 1) {
-                    if (this.config.fadePoint < 0) {
-                        this.config.fadePoint = 0;
-                    }
-                    var startingPoint = Nrs * this.config.fadePoint;
-                    var steps = Nrs - startingPoint;
-                    if (e >= startingPoint) {
-                        var currentStep = e - startingPoint;
-                        routeHtml.style.opacity = 1 - (1 / steps * currentStep);
-                    }
-                }
-                ul.appendChild(routeHtml);
-                e += 1;
-            }
+            var ul = renderFade(routeArray,this.config);
             wrapper.appendChild(ul);
         }
         return wrapper;
