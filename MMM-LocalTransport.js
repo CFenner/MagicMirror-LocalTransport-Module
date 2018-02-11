@@ -371,13 +371,6 @@ Module.register('MMM-LocalTransport', {
         /* main function creating HTML code to display*/
         this.config._headerDest = this.config._headerDestPlan; //resetting _headerDest in case there was an error loading...
         var wrapper = document.createElement("div");
-        /*if (!this.loaded || !this.info) {
-            if(!this.info){
-                wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");
-            }else{
-                wrapper.innerHTML = this.translate(this.info.status);
-            }
-            wrapper.className = "small dimmed";*/
         if (!this.loaded && !this.info) {
             /*if not loaded, display message*/
             wrapper.innerHTML = this.translate("LOADING_CONNECTIONS");

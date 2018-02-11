@@ -83,6 +83,22 @@ function renderDeparture(span, departureStop, fromWord, config){
     }
 }
 
+function calcOpacity(Nrs,e,config){
+    if (config.fadePoint < 0) {
+        config.fadePoint = 0;
+    }
+    if (config.fade && config.fadePoint < 1) {
+        var startingPoint = Nrs * config.fadePoint;
+        var steps = Nrs - startingPoint;
+        if (e >= startingPoint) {
+            var currentStep = e - startingPoint;
+            return = 1 - (1 / steps * currentStep);
+        }
+    }else{
+        return 1;
+    }
+}
+
 function renderFade(routeArray,config){
     /*create fade effect and append list items to the list*/
     var ul = document.createElement("ul");
@@ -92,17 +108,7 @@ function renderFade(routeArray,config){
         var routeData = routeArray[dataKey];
         var routeHtml = routeData.html;
         // Create fade effect.
-        if (config.fade && config.fadePoint < 1) {
-                    if (config.fadePoint < 0) {
-                        config.fadePoint = 0;
-                    }
-                    var startingPoint = Nrs * config.fadePoint;
-                    var steps = Nrs - startingPoint;
-                    if (e >= startingPoint) {
-                        var currentStep = e - startingPoint;
-                        routeHtml.style.opacity = 1 - (1 / steps * currentStep);
-                    }
-        }
+        routeHtml.style.opacity = calcOpacity(Nrs,e,config);
         ul.appendChild(routeHtml);
         e += 1;
     }
