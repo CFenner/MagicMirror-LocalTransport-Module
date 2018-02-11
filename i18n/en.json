@@ -1,5 +1,12 @@
 {
   "LOADING_CONNECTIONS": "Loading ...",
+  "OK": "I have a valid answer, but I don't want to show it to you :-P This is most likely a bug.",
+  "NOT_FOUND": "Either origin or destination couldn't be found.",
+  "ZERO_RESULTS": "No route found.",
+  "INVALID_REQUEST": "An invalid request was send.",
+  "OVER_QUERY_LIMIT": "You send too many requests.",
+  "REQUEST_DENIED": "Google denied your request.",
+  "UNKNOWN_ERROR": "Something went wrong. No one knows what.",
   "ARRIVAL": "arriving",
   "MINUTE_PL": "minutes",
   "MINUTE_SL": "minute",
@@ -7,5 +14,6 @@
   "MINUTE_PS": "min",
   "MINUTE_SS": "min",
   "SECOND_PS": "sec",
-  "FROM": "from"
+  "FROM": "from",
+  "ALT": "alternatives"
 }

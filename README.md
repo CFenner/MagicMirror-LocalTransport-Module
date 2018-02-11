@@ -41,6 +41,12 @@ Add module configuration to config.js.
 },
 ```
 
+For the header, the following keys can be specified and will be replaced with the according values at runtime:
+use `%{orig}` in the header definition for the module and it will be replaces with the origin as defined in the config
+use `%{dest}` in the header definition for the module and it will be replaces with the destination as defined in the config/ calendar event
+use `%{destX}` in the header definition for the module and it will be replaces with the destination as returned by Google
+These options are particularly useful if the destination is changed according to the calendar. The `%{orig}` option may become useful in the future.
+
 |Option|Description|
 |---|---|
 |`apiKey`|The API key, which can be obtained [here](https://developers.google.com/maps/documentation/directions/).<br><br>This value is **REQUIRED**|
@@ -49,8 +55,12 @@ Add module configuration to config.js.
 |`maximumEntries`|Maximum number of routes to display. Less routes will be shown if less are returned by Google. Routes will be sorted by arrival time. This option should take an integer value between `1` and `5`.<br><br>**Default value:** `3`|
 |`updateInterval`|How often does the content need to be fetched? (Minutes) Note that the module refreshes every 15 seconds to always display an accurate estimate when you need to leave.<br><br>**Default value:** `5`|
 |`animationSpeed`|Speed of the update animation. (Seconds)<br><br>**Default value:** `1`|
+|`getCalendarLocation`|Boolean to specify whether to read calendar notifications send by the default calendar module to display the route to the next event. The event must be less than one day away and contain a location to be considered for this functionality.<br><br>**Default value:** `false`|
 |`displayStationLength`|Number of characters of the departure station for each transport mode to display. <br>`0` means display all, <br>`-1` means don't show the departure station<br><br>**Default value:** `0`|
 |`displayArrival`|Boolean if the arrival time should be shown in the header for each option.<br><br>**Default value:** `true`|
+|`displayAltWalk`|Boolean if a note should be shown with the time it would take to walk instead of using public transport.<br><br>**Default value:** `false`|
+|`displayAltCycle`|Boolean if a note should be shown with the time it would take to take a bicycle instead of using public transport.<br><br>**Default value:** `false`|
+|`displayAltDrive`|Boolean if a note should be shown with the time it would take to drive instead of using public transport.<br><br>**Default value:** `false`|
 |`displayWalkType`|String how detailed the walking segments should be shown. <br> `'none'` means to not display anything,<br> `'short'` means to display the symbol, the time and the short version of the unit or <br> `'long'` means that a symbol, the time and the long string for the unit is displayed. This options is default if an invalid string is supplied.<br><br>**Default value:** `'short'`|
 |`maxWalkTime`|Maximum time you are willing to walk between stations in minutes<br><br>**Default value:** `10`|
 |`maxModuleWidth`|Maximum width of the module in pixel. Unlimited when set to `0`. This option can be used to make the module shorter in case of very long lines for directions. <br><br>**Default value:** `0`|

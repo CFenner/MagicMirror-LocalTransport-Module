@@ -1,5 +1,12 @@
 {
   "LOADING_CONNECTIONS": "Lade Verbindungen ...",
+  "OK": "Ich kenne die Antwort aber ich sage sie dir nicht :-P Dies ist höchstwahrscheinlich ein bug.",
+  "NOT_FOUND": "Start- oder Endpunkt konntent nicht gefunden werden.",
+  "ZERO_RESULTS": "Keine Verbindung gefunden.",
+  "INVALID_REQUEST": "Es wurde eine ungültige Anfrage gemacht.",
+  "OVER_QUERY_LIMIT": "Sie haben zu viele Anfragen gestellt.",
+  "REQUEST_DENIED": "Google hat ihre Anfrage abgewiesen.",
+  "UNKNOWN_ERROR": "Irgendetwas ist falsch gelaufen.",
   "ARRIVAL": "Ankunft",
   "MINUTE_PL": "Minuten",
   "MINUTE_SL": "Minute",
@@ -7,5 +14,6 @@
   "MINUTE_PS": "min",
   "MINUTE_SS": "min",
   "SECOND_PS": "sek",
-  "FROM": "von"
+  "FROM": "von",
+  "ALT": "Alternativen"
 }

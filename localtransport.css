@@ -1,2 +1,33 @@
-.MMM-LocalTransport ul{margin:0;padding:0;list-style:none;text-align:left}.MMM-LocalTransport ul li{margin-bottom:.25em}.MMM-LocalTransport ul li img.bw{-webkit-filter:grayscale(100%)}.MMM-LocalTransport ul li img:first-child{margin-left:0}.MMM-LocalTransport ul li img{margin:0 .25em 0 .5em}.MMM-LocalTransport ul li div{margin-left:.5em}
+/*.localtransport ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.localtransport ul li {
+  margin-bottom: .25em;
+}
+.localtransport ul li img:first-child {
+  margin-left: 0;
+}
+.localtransport ul li img {
+  margin: 0 .25em 0 .5em;
+  max-height: 15px;
+  max-width: 15px;
+  height: 15px;
+  width: 15px;
+}
+.localtransport ul li div {
+  margin-left: .5em;
+}
+
+.localtransport img.symbol.bw {
+  -webkit-filter: grayscale(100%);
+}*/
+.MMM-LocalTransport ul{margin:0;padding:0;list-style:none;text-align:left}
+.MMM-LocalTransport ul li{margin-bottom:.25em}
+.MMM-LocalTransport ul li img.bw{-webkit-filter:grayscale(100%)}
+.MMM-LocalTransport ul li img:first-child{margin-left:0}
+.MMM-LocalTransport ul li img{margin:0 .25em 0 .5em; max-height: 15px; max-width: 15px; height: 15px; width: 15px;}
+.MMM-LocalTransport ul li div{margin-left:.5em}
 /* This beautiful CSS-File has been crafted with LESS (lesscss.org) and compiled by simpLESS (wearekiss.com/simpless) */
